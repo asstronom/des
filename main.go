@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 )
 
 var isDecrypt bool
@@ -15,25 +16,36 @@ var inputFile string
 var outputFile string
 var key string
 
-func AllignSize(block []byte) {
+func AllignSize(block []byte) []byte {
 	rem := len(block) % des.BlockSize
 	if rem == 0 {
-		return
+		return block
 	}
 
 	block = append(block, make([]byte, rem)...)
+	return block
 }
 
 func AsyncCrypt(cipher cipher.Block, block []byte, isDecrypt bool) []byte {
-	AllignSize(block)
+	block = AllignSize(block)
 	pages := len(block) / des.BlockSize
-	for i := 0; i < pages; i++ {
+	wg := sync.WaitGroup{}
+	for i := 0; i < pages-1; i++ {
+		wg.Add(1)
 		if isDecrypt {
-			go cipher.Decrypt(block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()], block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()])
+			go func() {
+				cipher.Decrypt(block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()], block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()])
+				wg.Done()
+			}()
+
 		} else {
-			go cipher.Encrypt(block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()], block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()])
+			go func() {
+				cipher.Encrypt(block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()], block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()])
+				wg.Done()
+			}()
 		}
 	}
+	wg.Wait()
 	return block
 }
 
@@ -67,7 +79,11 @@ func main() {
 		log.Fatalln("error opening file:", err)
 	}
 
+	fmt.Println("len(input):", len(input))
+
 	result := AsyncCrypt(cipher, input, isDecrypt)
+
+	fmt.Println("len(result):", len(result))
 
 	if len(outputFile) == 0 {
 		fmt.Println(`no output file was given, writing to "output.txt"`)
