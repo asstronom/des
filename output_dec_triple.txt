@@ -1,0 +1,13 @@
+2 Eigen Light-Fields
+We propose an appearance-based algorithm for face recognition across pose. Our algorithm can
+use any number of gallery images captured at arbitrary poses and any number of probe images
+also captured with arbitrary poses. A minimum of one gallery and one probe image are needed,
+but if more images are available the performance of our algorithm generally improves.
+Our algorithm operates by estimating (a representation of) the light-field [34] of the subject’s
+head. First, generic training data are used to compute an eigenspace of head light-fields,
+similar to the construction of eigenfaces [47]. Light-fields are simply used rather than images.
+Given a collection of gallery or probe images, the projection into the eigenspace is performed
+by setting up a least-squares problem and solving for the projection coefficients similar to approaches
+used to deal with occlusions in the eigenspace approach [8, 33]. This simple linear
+algorithm can be applied to any number of images captured from any poses. Finally, matching
+is performed by comparing the probe and gallery eigen light-fields.
