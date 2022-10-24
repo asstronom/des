@@ -14,6 +14,14 @@ var inputFile string
 var outputFile string
 var key string
 
+func AllignSize(block []byte) {
+	rem := len(block) % 8
+	if rem == 0 {
+		return
+	}
+
+	block = append(block, make([]byte, rem)...)
+}
 func main() {
 	var err error
 
