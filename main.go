@@ -22,6 +22,20 @@ func AllignSize(block []byte) {
 
 	block = append(block, make([]byte, rem)...)
 }
+
+func AsyncCrypt(cipher cipher.Block, block []byte, isDecrypt bool) []byte {
+	AllignSize(block)
+	pages := len(block) / des.BlockSize
+	for i := 0; i < pages; i++ {
+		if isDecrypt {
+			go cipher.Decrypt(block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()], block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()])
+		} else {
+			go cipher.Encrypt(block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()], block[i*cipher.BlockSize():(i+1)*cipher.BlockSize()])
+		}
+	}
+	return block
+}
+
 func main() {
 	var err error
 
