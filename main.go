@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 )
 
 var isDecrypt bool
@@ -15,7 +16,7 @@ var outputFile string
 var key string
 
 func AllignSize(block []byte) {
-	rem := len(block) % 8
+	rem := len(block) % des.BlockSize
 	if rem == 0 {
 		return
 	}
@@ -55,7 +56,28 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	result := make([]byte, 8)
-	cipher.Encrypt([]byte("pudgeboo"), result)
-	fmt.Println(result)
+	fmt.Println("key:", key)
+
+	if len(inputFile) == 0 {
+		log.Fatalln("no input file was given")
+	}
+
+	input, err := os.ReadFile(inputFile)
+	if err != nil {
+		log.Fatalln("error opening file:", err)
+	}
+
+	result := AsyncCrypt(cipher, input, isDecrypt)
+
+	if len(outputFile) == 0 {
+		fmt.Println(`no output file was given, writing to "output.txt"`)
+		outputFile = "output.txt"
+	}
+
+	file, err := os.Create(outputFile)
+	if err != nil {
+		log.Fatalln("error opening file:", err)
+	}
+	defer file.Close()
+	file.Write(result)
 }
